@@ -1,11 +1,3 @@
-/* =========================
-   UDDHAR APPLICATION
-========================= */
-
-
-/* =========================
-   PAGE NAVIGATION
-========================= */
 
 const navButtons = document.querySelectorAll("[data-page]");
 const pages = document.querySelectorAll(".page");
@@ -103,9 +95,6 @@ navButtons.forEach((button) => {
 });
 
 
-/* =========================
-   EXPANDABLE DOCK
-========================= */
 
 if (dock && dockToggle) {
 
@@ -135,129 +124,244 @@ if (introScreen) {
     showPage("home");
 }
 
-/* =========================
-   FOOD RESCUE FORM
-========================= */
+const API_URL = "http://127.0.0.1:5000";
+
 
 const foodForm = document.getElementById("foodForm");
 
+
 if (foodForm) {
-    foodForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        if (
-            !validateField(
-                document.getElementById("foodName"),
-                "Please enter the food name."
-            )
-        ) return;
 
-        if (
-            !validateField(
-                document.getElementById("quantity"),
-                "Please enter the food quantity."
-            )
-        ) return;
+    foodForm.addEventListener(
+        "submit",
+        async (event) => {
 
-        if (
-            !validateField(
-                document.getElementById("location"),
-                "Please enter the pickup location."
-            )
-        ) return;
+            event.preventDefault();
 
-        if (
-            !validateField(
-                document.getElementById("expiry"),
-                "Please select the expiry time."
-            )
-        ) return;
 
-        const rescueData = {
-            foodName: document.getElementById("foodName").value,
-            quantity: document.getElementById("quantity").value,
-            foodType: document.getElementById("foodType").value,
-            location: document.getElementById("location").value,
-            expiry: document.getElementById("expiry").value,
-            contact: document.getElementById("contact").value
-        };
-        const expiryTime = new Date(rescueData.expiry).getTime();
+            if (
+                !validateField(
+                    document.getElementById("foodName"),
+                    "Please enter the food name."
+                )
+            ) return;
 
-        const hoursRemaining =
-            (expiryTime - Date.now()) / (1000 * 60 * 60);
 
-        try {
-            const response = await fetch(
-                "http://127.0.0.1:5000/analyze-priority",
-                {
-                    method: "POST",
+            if (
+                !validateField(
+                    document.getElementById("quantity"),
+                    "Please enter the food quantity."
+                )
+            ) return;
 
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
 
-                    body: JSON.stringify({
-                        type: "food",
-                        hoursRemaining: hoursRemaining
-                    })
+            if (
+                !validateField(
+                    document.getElementById("location"),
+                    "Please enter the pickup location."
+                )
+            ) return;
+
+
+            if (
+                !validateField(
+                    document.getElementById("expiry"),
+                    "Please select the expiry time."
+                )
+            ) return;
+
+
+            const rescueData = {
+
+                foodName:
+                    document.getElementById("foodName").value,
+
+                quantity:
+                    document.getElementById("quantity").value,
+
+                foodType:
+                    document.getElementById("foodType").value,
+
+                location:
+                    document.getElementById("location").value,
+
+                expiry:
+                    document.getElementById("expiry").value,
+
+                contact:
+                    document.getElementById("contact").value
+            };
+
+
+            try {
+
+                const response = await fetch(
+                    `${API_URL}/food-rescues`,
+                    {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(rescueData)
+
+                    }
+                );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to create rescue"
+                    );
+
                 }
-            );
-
-            const analysis = await response.json();
-
-            rescueData.priority = analysis.priority;
-            rescueData.score = analysis.score;
-
-            console.log(
-                "UDDHAR Priority Analysis:",
-                analysis
-            );
-
-        } catch (error) {
-
-            console.warn(
-                "Backend unavailable. Using local priority fallback.",
-                error
-            );
 
 
-            /* DEMO FALLBACK */
+                console.log(
+                    "Food Rescue Saved:",
+                    result
+                );
 
-            if (hoursRemaining <= 2) {
-                rescueData.priority = "high";
+
+                createRescueCard(
+                    result.rescue
+                );
+
+                async function loadFoodRescues() {
+
+                    const foodList =
+                        document.getElementById("foodList");
+
+
+                    if (!foodList) return;
+
+
+                    try {
+
+                        const response = await fetch(
+                            `${API_URL}/food-rescues`
+                        );
+
+
+                        const result =
+                            await response.json();
+
+
+                        if (!response.ok) {
+
+                            throw new Error(
+                                "Could not load food rescues"
+                            );
+
+                        }
+
+
+                        // Clear current content
+
+                        foodList.innerHTML = "";
+
+
+                        if (
+                            !result.rescues ||
+                            result.rescues.length === 0
+                        ) {
+
+                            foodList.innerHTML = `
+
+                <div class="empty-rescue-state">
+
+                    <i class="fa-solid fa-box-open"></i>
+
+                    <h3>No active rescues yet</h3>
+
+                    <p>
+                        Be the first to create a food rescue
+                        and prevent good food from going to waste.
+                    </p>
+
+                </div>
+
+            `;
+
+                            return;
+
+                        }
+
+
+                        // Render database rescues
+
+                        result.rescues.forEach(
+                            (rescue) => {
+
+                                createRescueCard(rescue);
+
+                            }
+                        );
+
+
+                        console.log(
+                            "Loaded Food Rescues:",
+                            result.count
+                        );
+
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Could not load food rescues:",
+                            error
+                        );
+
+                    }
+
+                }
+
+
+                updateImpact("mealsSaved");
+
+                updateImpact("activeListings");
+
+
+                showToast(
+                    "Rescue Posted",
+                    `Your ${result.rescue.priority.toUpperCase()} priority rescue has been added.`
+                );
+
+
+                foodForm.reset();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Food Rescue Error:",
+                    error
+                );
+
+
+                showToast(
+                    "Connection Error",
+                    error.message ||
+                    "Unable to connect to the UDDHAAR backend."
+                );
+
             }
-            else if (hoursRemaining <= 6) {
-                rescueData.priority = "medium";
-            }
-            else {
-                rescueData.priority = "low";
-            }
-
-            rescueData.score = 0;
 
         }
+    );
 
-        console.log("New Food Rescue:", rescueData);
-        updateImpact("mealsSaved");
-        updateImpact("activeListings");
-
-
-        updateImpact("foodImpact");
-        showToast(
-            "Rescue Posted",
-            "Your food rescue has been added to the active rescue board."
-        );
-
-        foodForm.reset();
-    });
 }
 
-/* =========================
-   FOOD RESCUE CARDS
-========================= */
-
-/* =========================
-   CREATE FOOD RESCUE CARD
-========================= */
 
 function createRescueCard(data) {
     const foodList = document.getElementById("foodList");
@@ -305,6 +409,9 @@ function createRescueCard(data) {
     const rescueCard = document.createElement("article");
 
     rescueCard.className = `rescue-card ${priority}`;
+
+    /* Database ID — needed to claim this rescue */
+    rescueCard.dataset.id = data.id || "";
 
     rescueCard.dataset.type =
         data.foodType || "other";
@@ -375,9 +482,6 @@ function createRescueCard(data) {
 }
 
 
-/* =========================
-   CLAIM RESCUE MODAL
-========================= */
 
 const claimModal =
     document.getElementById("claimModal");
@@ -484,44 +588,174 @@ if (claimForm) {
 
     claimForm.addEventListener(
         "submit",
-        (event) => {
+        async (event) => {
 
             event.preventDefault();
 
 
+            if (!selectedRescue) {
+
+                showToast(
+                    "Error",
+                    "No rescue selected.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            const rescueId =
+                selectedRescue.dataset.id;
+
+
             const rescueTitle =
-                selectedRescue?.querySelector(
-                    ".rescue-card-title"
-                )?.textContent.trim()
+                selectedRescue
+                    .querySelector(
+                        ".rescue-card-title"
+                    )
+                    ?.textContent
+                    .trim()
                 || "this rescue";
 
 
-            console.log(
-                "Claim submitted for:",
-                rescueTitle
-            );
+            /* Safety check */
 
-            updateImpact("claimedListings");
-            showToast(
-                "Claim Request Sent",
-                `Your request to claim ${rescueTitle} has been submitted.`
-            );
+            if (!rescueId) {
+
+                showToast(
+                    "Error",
+                    "This rescue is not connected to the database yet.",
+                    "error"
+                );
+
+                return;
+
+            }
 
 
-            claimForm.reset();
+            try {
 
-            claimModal.classList.remove("active");
+                const response = await fetch(
+                    `${API_URL}/food-rescues/${rescueId}/claim`,
+                    {
+                        method: "POST",
 
-            selectedRescue = null;
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to claim rescue"
+                    );
+
+                }
+
+
+                console.log(
+                    "Rescue claimed:",
+                    result
+                );
+
+
+                /* Update impact */
+
+                updateImpact(
+                    "claimedListings"
+                );
+
+
+                /* Remove card from board */
+
+                selectedRescue.remove();
+
+
+                /* Show empty state if needed */
+
+                const foodList =
+                    document.getElementById(
+                        "foodList"
+                    );
+
+
+                if (
+                    foodList &&
+                    foodList.querySelectorAll(
+                        ".rescue-card"
+                    ).length === 0
+                ) {
+
+                    foodList.innerHTML = `
+                    
+                        <div class="empty-rescue-state">
+
+                            <i class="fa-solid fa-box-open"></i>
+
+                            <h3>
+                                No active rescues yet
+                            </h3>
+
+                            <p>
+                                Be the first to create a food rescue
+                                and prevent good food from going to waste.
+                            </p>
+
+                        </div>
+                    
+                    `;
+
+                }
+
+
+                showToast(
+                    "Rescue Claimed",
+                    `${rescueTitle} has been successfully claimed.`
+                );
+
+
+                claimForm.reset();
+
+                claimModal.classList.remove(
+                    "active"
+                );
+
+                selectedRescue = null;
+
+
+            } catch (error) {
+
+                console.error(
+                    "Claim Error:",
+                    error
+                );
+
+
+                showToast(
+                    "Claim Failed",
+                    error.message ||
+                    "Unable to connect to the UDDHAAR backend.",
+                    "error"
+                );
+
+            }
 
         }
     );
 
 }
 
-/* =========================
-   FOOD RESCUE FILTERS
-========================= */
 
 const filterButtons =
     document.querySelectorAll(".filter-btn");
@@ -598,9 +832,6 @@ filterButtons.forEach((button) => {
 
 });
 
-/* =========================
-   IMPACT COUNTER ANIMATION
-========================= */
 
 function animateCounter(element) {
     const target = Number(element.dataset.target);
@@ -633,9 +864,6 @@ impactCounters.forEach((counter) => {
     animateCounter(counter);
 });
 
-/* =========================
-   SOS FUNCTIONALITY
-========================= */
 
 const sosTrigger = document.getElementById("sosTrigger");
 const sosForm = document.getElementById("sosForm");
@@ -771,9 +999,6 @@ if (sosForm) {
         }
     });
 }
-/* =========================
-   TOAST NOTIFICATIONS
-========================= */
 
 const toastContainer =
     document.getElementById("toastContainer");
@@ -826,9 +1051,98 @@ function showToast(
     }, 4000);
 }
 
-/* =========================
-   CIVIC REPORT FUNCTIONALITY
-========================= */
+
+const demoChat = document.getElementById("demoChat");
+const demoChatTrigger = document.getElementById("demoChatTrigger");
+const demoChatClose = document.getElementById("demoChatClose");
+const demoChatForm = document.getElementById("demoChatForm");
+const demoChatInput = document.getElementById("demoChatInput");
+const demoChatBody = document.getElementById("demoChatBody");
+const demoChatChips = document.querySelectorAll(".demo-chip");
+
+function appendDemoMessage(text, sender = "bot") {
+    if (!demoChatBody) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = `demo-message ${sender}`;
+
+    const bubble = document.createElement("p");
+    bubble.textContent = text;
+    wrapper.appendChild(bubble);
+    demoChatBody.appendChild(wrapper);
+    demoChatBody.scrollTop = demoChatBody.scrollHeight;
+}
+
+function generateDemoReply(message) {
+    const text = message.toLowerCase();
+
+    if (/food|rescue|meal|donation/.test(text)) {
+        return "Food rescue demo: 18 meals detected, 2 pickups scheduled, and a volunteer is en route to the nearest community partner.";
+    }
+
+    if (/sos|emergency|urgent|alert/.test(text)) {
+        return "SOS demo: high-priority emergency routing engaged. Location, impact, and responder queue have been staged for rapid coordination.";
+    }
+
+    if (/civic|issue|road|water|waste|repair/.test(text)) {
+        return "Civic issue demo: the report has been classified as a community priority and routed to the relevant local response channel.";
+    }
+
+    if (/hello|hi|hey/.test(text)) {
+        return "Welcome to the UDDHAAR demo. Ask for Food rescue, SOS, or Civic issue to preview each flow.";
+    }
+
+    return "Demo response: I’ve mapped this to the community response flow and prepared a sample escalation for the mock dashboard.";
+}
+
+if (demoChatTrigger) {
+    demoChatTrigger.addEventListener("click", () => {
+        if (!demoChat) return;
+        demoChat.classList.toggle("open");
+        const isOpen = demoChat.classList.contains("open");
+        demoChatTrigger.setAttribute("aria-expanded", String(isOpen));
+
+        if (isOpen && demoChatInput) {
+            demoChatInput.focus();
+        }
+    });
+}
+
+if (demoChatClose) {
+    demoChatClose.addEventListener("click", () => {
+        if (demoChat) {
+            demoChat.classList.remove("open");
+        }
+    });
+}
+
+if (demoChatChips) {
+    demoChatChips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+            const value = chip.dataset.message || chip.textContent.trim();
+            if (value && demoChatInput) {
+                demoChatInput.value = value;
+                demoChatForm?.requestSubmit?.();
+            }
+        });
+    });
+}
+
+if (demoChatForm) {
+    demoChatForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (!demoChatInput) return;
+
+        const value = demoChatInput.value.trim();
+        if (!value) return;
+
+        appendDemoMessage(value, "user");
+        appendDemoMessage(generateDemoReply(value), "bot");
+        demoChatInput.value = "";
+        demoChatInput.focus();
+    });
+}
 
 const civicForm = document.getElementById("civicForm");
 const civicReportBoard =
@@ -975,9 +1289,6 @@ if (civicForm) {
 
 }
 
-/* =========================
-   CIVIC RESPONSE SUPPORT
-========================= */
 
 document.addEventListener("click", (event) => {
 
@@ -1036,9 +1347,70 @@ document.addEventListener("click", (event) => {
 
 });
 
-/* =========================
-   IMPACT DASHBOARD UPDATES
-========================= */
+
+// ==========================================
+// LOAD LIVE IMPACT DASHBOARD
+// ==========================================
+
+async function loadDashboard() {
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/dashboard`
+        );
+
+        const result = await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load dashboard"
+            );
+
+        }
+
+
+        const data = result.dashboard;
+
+
+        document.getElementById(
+            "mealsSaved"
+        ).textContent =
+            data.mealsSaved;
+
+
+        document.getElementById(
+            "claimedListings"
+        ).textContent =
+            data.claimedListings;
+
+
+        document.getElementById(
+            "activeListings"
+        ).textContent =
+            data.activeListings;
+
+
+        console.log(
+            "Live dashboard loaded:",
+            data
+        );
+
+
+    } catch (error) {
+
+        console.warn(
+            "Dashboard loading error:",
+            error
+        );
+
+    }
+
+}
+
+
 
 function updateImpact(statId, amount = 1) {
 
@@ -1056,3 +1428,14 @@ function updateImpact(statId, amount = 1) {
 
     stat.textContent = newValue;
 }
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadFoodRescues();
+
+        loadDashboard();
+
+    }
+);

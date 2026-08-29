@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UDDHAAR — Rescue What Matters</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800&family=Lora:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
@@ -21,7 +28,7 @@
       >
         <i class="fa-solid fa-chevron-right"></i>
       </button>
-      
+
       <button
         type="button"
         data-page="home"
@@ -61,20 +68,38 @@
       </div>
     </div>
 
-    <!-- =========================
-     HOME PAGE
-========================= -->
+    <div class="brand-strip">
+      <div class="brand-strip-content">
+        <!-- LONEWOLFE BRAND -->
+        <div class="brand-side brand-lonewolfe">
+          <div class="brand-wolf">
+            <img
+              src="Lonewolfe-logo.png"
+              alt="Lonewolfe logo"
+              class="brand-logo"
+            />
+          </div>
 
-    <div class="page-branding brand-header">
-      <div class="brand-mark-wrap">
-        <div class="brand-logo-box">
-          <img
-            src="Lonewolfe PPT.png"
-            alt="Lonewolfe logo"
-            class="brand-logo"
-          />
+          <div class="brand-name">
+            <span class="brand-small">MADE BY</span>
+            <span class="lonewolfe-text">LONEWOLFE</span>
+          </div>
         </div>
-        <div class="brand-badge" aria-label="UDDHAAR brand mark">उ</div>
+
+        <!-- CONNECTION -->
+        <div class="brand-divider">
+          <span></span>
+        </div>
+
+        <!-- UDDHAAR BRAND -->
+        <div class="brand-side brand-uddhaar">
+          <div class="brand-uddhaar-symbol">उ</div>
+
+          <div class="brand-name">
+            <span class="brand-small">THE RESPONSE NETWORK</span>
+            <span class="uddhaar-hindi">उद्धार</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -294,10 +319,17 @@
             One Platform.
             <span>Multiple Ways to Respond.</span>
           </h2>
+        </div>
 
+        <div class="why-lead">
           <p>
             UDDHAAR is designed around one simple idea: when a need is
             identified, the right response should be easier to find.
+          </p>
+
+          <p class="why-highlight">
+            It brings food rescue, emergency support and civic action into one
+            connected system so people can move from awareness to action faster.
           </p>
         </div>
 
@@ -680,7 +712,7 @@
             <div class="location-input">
               <i class="fa-solid fa-location-crosshairs"></i>
 
-              <input
+              <input0
                 id="sosLocation"
                 placeholder="Enter or detect your location"
                 required
@@ -996,6 +1028,51 @@
     </footer>
 
     <div id="toastContainer"></div>
+
+    <div class="demo-chat" id="demoChat">
+      <button
+        type="button"
+        class="demo-chat-trigger"
+        id="demoChatTrigger"
+        aria-label="Open demo chat"
+      >
+        <i class="fa-solid fa-comments"></i>
+      </button>
+
+      <div class="demo-chat-panel" id="demoChatPanel" aria-live="polite">
+        <div class="demo-chat-header">
+          <div>
+            <span class="demo-chat-label">UDDHAAR DEMO</span>
+            <h3>Response Assistant</h3>
+          </div>
+          <button type="button" class="demo-chat-close" id="demoChatClose" aria-label="Close chat">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="demo-chat-body" id="demoChatBody">
+          <div class="demo-message bot">
+            <p>Hi! I can demo the UDDHAAR flows. Try “Food rescue”, “SOS”, or “Civic issue”.</p>
+          </div>
+        </div>
+
+        <div class="demo-chat-chips">
+          <button type="button" class="demo-chip" data-message="Food rescue">Food rescue</button>
+          <button type="button" class="demo-chip" data-message="SOS">SOS</button>
+          <button type="button" class="demo-chip" data-message="Civic issue">Civic</button>
+        </div>
+
+        <form class="demo-chat-form" id="demoChatForm">
+          <input
+            id="demoChatInput"
+            type="text"
+            placeholder="Ask the demo..."
+            autocomplete="off"
+          />
+          <button type="submit">Send</button>
+        </form>
+      </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
