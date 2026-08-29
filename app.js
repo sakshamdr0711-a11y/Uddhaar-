@@ -10,6 +10,8 @@
 const navButtons = document.querySelectorAll("[data-page]");
 const pages = document.querySelectorAll(".page");
 const introScreen = document.getElementById("intro");
+const dock = document.querySelector(".dock");
+const dockToggle = document.querySelector(".dock-toggle");
 
 const pageMap = {
     home: "homePage",
@@ -17,6 +19,27 @@ const pageMap = {
     sos: "sosPage",
     civic: "civicPage"
 };
+
+function validateField(input, message) {
+    if (!input) {
+        if (message) {
+            console.warn(message);
+        }
+        return false;
+    }
+
+    const value = input.value?.trim?.() ?? "";
+
+    if (!value) {
+        if (message) {
+            showToast("Required", message, "error");
+        }
+        input.focus();
+        return false;
+    }
+
+    return true;
+}
 
 function showPage(pageName) {
     const targetId = pageMap[pageName];
@@ -58,12 +81,47 @@ function showPage(pageName) {
 navButtons.forEach((button) => {
     button.addEventListener("click", (event) => {
         event.preventDefault();
+
         const nextPage = button.dataset.page;
+
         if (nextPage) {
             showPage(nextPage);
+
+            /* Close navigation after page selection */
+            if (dock) {
+                dock.classList.remove("expanded");
+            }
+
+            if (dockToggle) {
+                dockToggle.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
         }
     });
 });
+
+
+/* =========================
+   EXPANDABLE DOCK
+========================= */
+
+if (dock && dockToggle) {
+
+    dockToggle.addEventListener("click", () => {
+
+        const isExpanded =
+            dock.classList.toggle("expanded");
+
+        dockToggle.setAttribute(
+            "aria-expanded",
+            isExpanded
+        );
+
+    });
+
+}
 
 if (introScreen) {
     setTimeout(() => {
@@ -84,7 +142,7 @@ if (introScreen) {
 const foodForm = document.getElementById("foodForm");
 
 if (foodForm) {
-    foodForm.addEventListener("submit", (event) => {
+    foodForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (
             !validateField(
@@ -122,12 +180,67 @@ if (foodForm) {
             expiry: document.getElementById("expiry").value,
             contact: document.getElementById("contact").value
         };
+        const expiryTime = new Date(rescueData.expiry).getTime();
+
+        const hoursRemaining =
+            (expiryTime - Date.now()) / (1000 * 60 * 60);
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:5000/analyze-priority",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        type: "food",
+                        hoursRemaining: hoursRemaining
+                    })
+                }
+            );
+
+            const analysis = await response.json();
+
+            rescueData.priority = analysis.priority;
+            rescueData.score = analysis.score;
+
+            console.log(
+                "UDDHAR Priority Analysis:",
+                analysis
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "Backend unavailable. Using local priority fallback.",
+                error
+            );
+
+
+            /* DEMO FALLBACK */
+
+            if (hoursRemaining <= 2) {
+                rescueData.priority = "high";
+            }
+            else if (hoursRemaining <= 6) {
+                rescueData.priority = "medium";
+            }
+            else {
+                rescueData.priority = "low";
+            }
+
+            rescueData.score = 0;
+
+        }
 
         console.log("New Food Rescue:", rescueData);
         updateImpact("mealsSaved");
-        updateImpact("activeListings");     
-        
-        
+        updateImpact("activeListings");
+
+
         updateImpact("foodImpact");
         showToast(
             "Rescue Posted",
@@ -172,15 +285,17 @@ function createRescueCard(data) {
         (expiryTime - currentTime) / (1000 * 60 * 60);
 
 
-    let priority = "normal";
+    const priority = data.priority || "low";
+
     let priorityLabel = "Available";
 
-
-    if (hoursRemaining <= 2) {
-        priority = "high";
+    if (priority === "critical") {
+        priorityLabel = "Critical";
+    }
+    else if (priority === "high") {
         priorityLabel = "High Priority";
-    } else if (hoursRemaining <= 6) {
-        priority = "soon";
+    }
+    else if (priority === "medium") {
         priorityLabel = "Expiring Soon";
     }
 
@@ -576,91 +691,85 @@ if (sosTrigger) {
 
 if (sosForm) {
 
-    sosForm.addEventListener(
-        "submit",
-        (event) => {
+    sosForm.addEventListener("submit", async (event) => {
 
-            event.preventDefault();
-            if (
-                !validateField(
-                    document.getElementById("emergencyType"),
-                    "Please select the emergency type."
-                )
-            ) return;
+        event.preventDefault();
+        if (
+            !validateField(
+                document.getElementById("emergencyType"),
+                "Please select the emergency type."
+            )
+        ) return;
 
-            if (
-                !validateField(
-                    document.getElementById("sosLocation"),
-                    "Please provide the emergency location."
-                )
-            ) return;
+        if (
+            !validateField(
+                document.getElementById("sosLocation"),
+                "Please provide the emergency location."
+            )
+        ) return;
 
-            if (
-                !validateField(
-                    document.getElementById("sosDescription"),
-                    "Please describe the emergency."
-                )
-            ) return;
+        if (
+            !validateField(
+                document.getElementById("sosDescription"),
+                "Please describe the emergency."
+            )
+        ) return;
 
+        const sosData = {
+            emergencyType: document.getElementById("emergencyType").value,
+            location: document.getElementById("sosLocation").value,
+            description: document.getElementById("sosDescription").value,
+            peopleAffected: document.getElementById("peopleAffected").value || "Not specified"
+        };
 
-            const sosData = {
-
-                emergencyType:
-                    document.getElementById(
-                        "emergencyType"
-                    ).value,
-
-                location:
-                    document.getElementById(
-                        "sosLocation"
-                    ).value,
-
-                description:
-                    document.getElementById(
-                        "sosDescription"
-                    ).value,
-
-                peopleAffected:
-                    document.getElementById(
-                        "peopleAffected"
-                    ).value || "Not specified"
-
-            };
-
-
-            console.log(
-                "Emergency SOS Report:",
-                sosData
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:5000/analyze-priority",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        type: "emergency",
+                        emergencyType: sosData.emergencyType,
+                        peopleAffected: sosData.peopleAffected
+                    })
+                }
             );
 
-            updateImpact("emergencyImpact");
-            showToast(
-                "Emergency Report Sent",
-                "Your report has been recorded for response coordination."
-            );
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
 
+            const analysis = await response.json();
+            sosData.priority = analysis.priority;
+            sosData.score = analysis.score;
+            console.log("UDDHAR SOS Analysis:", analysis);
+        } catch (error) {
+            console.warn("SOS backend unavailable. Continuing in demo mode.", error);
+            sosData.priority = "high";
+            sosData.score = 0;
+        }
 
-            sosForm.reset();
+        console.log("Emergency SOS Report:", sosData);
 
+        updateImpact("emergencyImpact");
+        showToast(
+            "Emergency Report Sent",
+            "Your report has been recorded for response coordination."
+        );
 
-            /* RESET SOS BUTTON */
+        sosForm.reset();
 
-            if (sosTrigger) {
-
-                sosTrigger.classList.remove(
-                    "activated"
-                );
-
-                sosTrigger.innerHTML = `
+        if (sosTrigger) {
+            sosTrigger.classList.remove("activated");
+            sosTrigger.innerHTML = `
           <i class="fa-solid fa-triangle-exclamation"></i>
           <span>ACTIVATE SOS</span>
         `;
-
-            }
-
         }
-    );
-
+    });
 }
 /* =========================
    TOAST NOTIFICATIONS

@@ -73,6 +73,53 @@ body::before {
   z-index: -1;
 }
 
+/* =========================================
+   UDDHAAR — SIGNATURE BACKGROUND TEXTURE
+========================================= */
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+
+  background-image:
+    linear-gradient(
+      rgba(214, 169, 79, 0.025) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(214, 169, 79, 0.025) 1px,
+      transparent 1px
+    );
+
+  background-size: 64px 64px;
+
+  mask-image: radial-gradient(
+    circle at center,
+    black 10%,
+    transparent 75%
+  );
+
+  -webkit-mask-image: radial-gradient(
+    circle at center,
+    black 10%,
+    transparent 75%
+  );
+}
+
+/* UDDHAAR SIGNAL LINE */
+
+body {
+  position: relative;
+}
+
+body::selection {
+  background: var(--primary);
+  color: var(--bg);
+}
 
 /* =========================
    GLOBAL ELEMENTS
@@ -193,9 +240,14 @@ section {
   animation: introOrbFloat 12s ease-in-out infinite alternate-reverse;
 }
 
-#intro.fade-out {
+#intro.fade-out,
+#intro.hidden {
   opacity: 0;
   visibility: hidden;
+}
+
+#intro.hidden {
+  display: none !important;
 }
 
 .intro-content {
@@ -3829,4 +3881,123 @@ section {
 
 .page.active {
   display: block;
+}
+
+/* =========================================
+   UDDHAAR — EXPANDABLE ARROW NAVIGATION
+========================================= */
+
+/* Closed dock */
+.dock {
+  left: auto;
+  right: 1.5rem;
+
+  bottom: 1.5rem;
+
+  transform: none;
+
+  width: 58px;
+  max-width: 58px;
+  height: 58px;
+
+  padding: 0.4rem;
+
+  overflow: hidden;
+
+  border-radius: 18px;
+
+  transition:
+    width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    max-width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.45s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Expanded state */
+.dock.expanded {
+  width: min(620px, calc(100vw - 3rem));
+  max-width: calc(100vw - 3rem);
+
+  border-radius: 22px;
+}
+
+/* Toggle arrow */
+.dock-toggle {
+  flex-shrink: 0;
+
+  width: 50px;
+  height: 50px;
+
+  display: grid;
+  place-items: center;
+
+  background: var(--primary);
+  color: var(--bg);
+
+  border-radius: 14px;
+
+  font-size: 1rem;
+
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.25s ease;
+}
+
+/* Arrow rotates when expanded */
+.dock.expanded .dock-toggle {
+  transform: rotate(180deg);
+  background: rgba(214, 169, 79, 0.12);
+  color: var(--primary);
+}
+
+/* Hide navigation items initially */
+.dock button[data-page] {
+  opacity: 0;
+
+  transform: translateX(20px);
+
+  pointer-events: none;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Show them when dock expands */
+.dock.expanded button[data-page] {
+  opacity: 1;
+
+  transform: translateX(0);
+
+  pointer-events: auto;
+}
+
+/* Slight stagger effect */
+.dock.expanded button[data-page]:nth-of-type(2) {
+  transition-delay: 0.05s;
+}
+
+.dock.expanded button[data-page]:nth-of-type(3) {
+  transition-delay: 0.1s;
+}
+
+.dock.expanded button[data-page]:nth-of-type(4) {
+  transition-delay: 0.15s;
+}
+
+.dock.expanded button[data-page]:nth-of-type(5) {
+  transition-delay: 0.2s;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .dock {
+    right: 0.8rem;
+    bottom: 0.8rem;
+  }
+
+  .dock.expanded {
+    width: calc(100vw - 1.6rem);
+    max-width: calc(100vw - 1.6rem);
+  }
 }

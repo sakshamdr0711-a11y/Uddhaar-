@@ -13,7 +13,21 @@
 
   <body>
     <nav class="dock" aria-label="Primary navigation">
-      <button type="button" data-page="home" class="active" aria-label="Open Home page">
+      <button
+        type="button"
+        class="dock-toggle"
+        aria-label="Open navigation"
+        aria-expanded="false"
+      >
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      
+      <button
+        type="button"
+        data-page="home"
+        class="active"
+        aria-label="Open Home page"
+      >
         <i class="fa-solid fa-house"></i>
         <span>Home</span>
       </button>
